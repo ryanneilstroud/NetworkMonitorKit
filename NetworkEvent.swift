@@ -1,0 +1,77 @@
+import Foundation
+
+public struct NetworkEvent: Codable, Identifiable, Sendable {
+    public enum Kind: String, Codable, Sendable {
+        case started
+        case completed
+    }
+
+    public struct RequestPayload: Codable, Sendable {
+        public let url: String
+        public let method: String
+        public let headers: [String: String]
+        public let body: String?
+
+        public init(url: String, method: String, headers: [String: String], body: String?) {
+            self.url = url
+            self.method = method
+            self.headers = headers
+            self.body = body
+        }
+    }
+
+    public struct ResponsePayload: Codable, Sendable {
+        public let statusCode: Int?
+        public let headers: [String: String]
+        public let body: String?
+        public let error: String?
+        public let durationMS: Int
+
+        public init(statusCode: Int?, headers: [String: String], body: String?, error: String?, durationMS: Int) {
+            self.statusCode = statusCode
+            self.headers = headers
+            self.body = body
+            self.error = error
+            self.durationMS = durationMS
+        }
+    }
+
+    public let id: UUID
+    public let kind: Kind
+    public let timestamp: Date
+    public let requestID: UUID
+    public let request: RequestPayload
+    public let response: ResponsePayload?
+
+    public init(
+        id: UUID = UUID(),
+        kind: Kind,
+        timestamp: Date = Date(),
+        requestID: UUID,
+        request: RequestPayload,
+        response: ResponsePayload?
+    ) {
+        self.id = id
+        self.kind = kind
+        self.timestamp = timestamp
+        self.requestID = requestID
+        self.request = request
+        self.response = response
+    }
+}
+
+func stringDictionary(from headers: [AnyHashable: Any]?) -> [String: String] {
+    guard let headers else { return [:] }
+    return headers.reduce(into: [:]) { output, item in
+        output[String(describing: item.key)] = String(describing: item.value)
+    }
+}
+
+func decodeBody(_ data: Data?) -> String? {
+    guard let data, !data.isEmpty else { return nil }
+    if let utf8String = String(data: data, encoding: .utf8) {
+        return utf8String
+    }
+    return data.base64EncodedString()
+}
+
