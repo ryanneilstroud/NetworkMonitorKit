@@ -1,5 +1,10 @@
 import Foundation
 import Network
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
 actor EventTransport {
     static let shared = EventTransport()
@@ -10,6 +15,7 @@ actor EventTransport {
     private var port: UInt16?
     private var pendingEvents: [NetworkEvent] = []
     private let maxPendingEvents = 500
+    private let clientInfo = EventTransport.makeClientInfo()
 
     func configure(host: String, port: UInt16) {
         self.host = host
@@ -78,7 +84,7 @@ actor EventTransport {
         do {
             let encoder = JSONEncoder()
             encoder.dateEncodingStrategy = .iso8601
-            var line = try encoder.encode(event)
+            var line = try encoder.encode(enriched(event))
             line.append(0x0A)
             connection.send(content: line, completion: .contentProcessed({ [weak self, weak connection] error in
                 guard let self, let connection else { return }
@@ -116,5 +122,40 @@ actor EventTransport {
         for event in buffered {
             send(event, over: connection)
         }
+    }
+
+    private func enriched(_ event: NetworkEvent) -> NetworkEvent {
+        guard event.client == nil else { return event }
+        return NetworkEvent(
+            id: event.id,
+            kind: event.kind,
+            timestamp: event.timestamp,
+            requestID: event.requestID,
+            request: event.request,
+            response: event.response,
+            client: clientInfo
+        )
+    }
+
+    private static func makeClientInfo() -> NetworkEvent.ClientInfo {
+        let appName =
+            (Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String) ??
+            (Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String) ??
+            ProcessInfo.processInfo.processName
+        let bundleIdentifier = Bundle.main.bundleIdentifier
+
+        #if canImport(UIKit)
+        let deviceName = UIDevice.current.name
+        #elseif canImport(AppKit)
+        let deviceName = Host.current().localizedName ?? ProcessInfo.processInfo.hostName
+        #else
+        let deviceName = ProcessInfo.processInfo.hostName
+        #endif
+
+        return NetworkEvent.ClientInfo(
+            deviceName: deviceName,
+            appName: appName,
+            bundleIdentifier: bundleIdentifier
+        )
     }
 }

@@ -36,12 +36,25 @@ public struct NetworkEvent: Codable, Identifiable, Sendable {
         }
     }
 
+    public struct ClientInfo: Codable, Sendable {
+        public let deviceName: String
+        public let appName: String
+        public let bundleIdentifier: String?
+
+        public init(deviceName: String, appName: String, bundleIdentifier: String?) {
+            self.deviceName = deviceName
+            self.appName = appName
+            self.bundleIdentifier = bundleIdentifier
+        }
+    }
+
     public let id: UUID
     public let kind: Kind
     public let timestamp: Date
     public let requestID: UUID
     public let request: RequestPayload
     public let response: ResponsePayload?
+    public let client: ClientInfo?
 
     public init(
         id: UUID = UUID(),
@@ -49,7 +62,8 @@ public struct NetworkEvent: Codable, Identifiable, Sendable {
         timestamp: Date = Date(),
         requestID: UUID,
         request: RequestPayload,
-        response: ResponsePayload?
+        response: ResponsePayload?,
+        client: ClientInfo? = nil
     ) {
         self.id = id
         self.kind = kind
@@ -57,6 +71,7 @@ public struct NetworkEvent: Codable, Identifiable, Sendable {
         self.requestID = requestID
         self.request = request
         self.response = response
+        self.client = client
     }
 }
 
@@ -74,4 +89,3 @@ func decodeBody(_ data: Data?) -> String? {
     }
     return data.base64EncodedString()
 }
-
