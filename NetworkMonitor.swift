@@ -3,7 +3,7 @@ import Foundation
 public enum NetworkMonitor {
     private static var configured = false
 
-    public static func start(host: String = "127.0.0.1", port: UInt16 = 61337) {
+    public static func start(host: String = "localhost", port: UInt16 = 61337) {
         guard !configured else { return }
         configured = true
         URLProtocol.registerClass(MonitorURLProtocol.self)
@@ -36,4 +36,3 @@ public enum NetworkMonitor {
         }
     }
 }
-
