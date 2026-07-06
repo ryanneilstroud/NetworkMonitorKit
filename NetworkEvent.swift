@@ -6,6 +6,29 @@ public struct NetworkEvent: Codable, Identifiable, Sendable {
         case completed
     }
 
+    public struct NetworkTransportMessage: Codable, Sendable {
+        public enum MessageType: String, Codable, Sendable {
+            case event
+            case clientHello
+        }
+
+        public let type: MessageType
+        public let event: NetworkEvent?
+        public let client: NetworkEvent.ClientInfo?
+
+        public init(event: NetworkEvent) {
+            self.type = .event
+            self.event = event
+            self.client = nil
+        }
+
+        public init(clientHello client: NetworkEvent.ClientInfo) {
+            self.type = .clientHello
+            self.event = nil
+            self.client = client
+        }
+    }
+
     public struct RequestPayload: Codable, Sendable {
         public let url: String
         public let method: String

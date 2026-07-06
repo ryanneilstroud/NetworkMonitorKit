@@ -70,6 +70,7 @@ actor EventTransport {
         guard self.connection === connection else { return }
         isReady = value
         if value {
+            sendClientHello(over: connection)
             flushPending(over: connection)
         }
     }
@@ -84,24 +85,47 @@ actor EventTransport {
         do {
             let encoder = JSONEncoder()
             encoder.dateEncodingStrategy = .iso8601
-            var line = try encoder.encode(enriched(event))
-            line.append(0x0A)
-            connection.send(content: line, completion: .contentProcessed({ [weak self, weak connection] error in
-                guard let self, let connection else { return }
-                Task {
-                    await self.handleSendCompletion(error: error, event: event, over: connection)
-                }
-            }))
+            let payload = NetworkEvent.NetworkTransportMessage(event: enriched(event))
+            try send(payload: payload, over: connection, encoder: encoder, trackedEvent: event)
         } catch {
             // Intentionally dropped: monitoring should not crash user apps.
         }
     }
 
-    private func handleSendCompletion(error: NWError?, event: NetworkEvent, over connection: NWConnection) {
+    private func sendClientHello(over connection: NWConnection) {
+        do {
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            let payload = NetworkEvent.NetworkTransportMessage(clientHello: clientInfo)
+            try send(payload: payload, over: connection, encoder: encoder, trackedEvent: nil)
+        } catch {
+            // Intentionally dropped: monitoring should not crash user apps.
+        }
+    }
+
+    private func send(
+        payload: NetworkEvent.NetworkTransportMessage,
+        over connection: NWConnection,
+        encoder: JSONEncoder,
+        trackedEvent: NetworkEvent?
+    ) throws {
+        var line = try encoder.encode(payload)
+        line.append(0x0A)
+        connection.send(content: line, completion: .contentProcessed({ [weak self, weak connection] error in
+            guard let self, let connection else { return }
+            Task {
+                await self.handleSendCompletion(error: error, event: trackedEvent, over: connection)
+            }
+        }))
+    }
+
+    private func handleSendCompletion(error: NWError?, event: NetworkEvent?, over connection: NWConnection) {
         guard let error else { return }
         _ = error
         guard self.connection === connection else { return }
-        enqueue(event)
+        if let event {
+            enqueue(event)
+        }
         connection.cancel()
         self.connection = nil
         isReady = false
