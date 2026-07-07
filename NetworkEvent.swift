@@ -1,41 +1,41 @@
 import Foundation
 
-public struct NetworkEvent: Codable, Identifiable, Sendable {
-    public enum Kind: String, Codable, Sendable {
+struct NetworkEvent: Codable, Identifiable, Sendable {
+    enum Kind: String, Codable, Sendable {
         case started
         case completed
     }
 
-    public struct NetworkTransportMessage: Codable, Sendable {
-        public enum MessageType: String, Codable, Sendable {
+    struct NetworkTransportMessage: Codable, Sendable {
+        enum MessageType: String, Codable, Sendable {
             case event
             case clientHello
         }
 
-        public let type: MessageType
-        public let event: NetworkEvent?
-        public let client: NetworkEvent.ClientInfo?
+        let type: MessageType
+        let event: NetworkEvent?
+        let client: NetworkEvent.ClientInfo?
 
-        public init(event: NetworkEvent) {
+        init(event: NetworkEvent) {
             self.type = .event
             self.event = event
             self.client = nil
         }
 
-        public init(clientHello client: NetworkEvent.ClientInfo) {
+        init(clientHello client: NetworkEvent.ClientInfo) {
             self.type = .clientHello
             self.event = nil
             self.client = client
         }
     }
 
-    public struct RequestPayload: Codable, Sendable {
-        public let url: String
-        public let method: String
-        public let headers: [String: String]
-        public let body: String?
+    struct RequestPayload: Codable, Sendable {
+        let url: String
+        let method: String
+        let headers: [String: String]
+        let body: String?
 
-        public init(url: String, method: String, headers: [String: String], body: String?) {
+        init(url: String, method: String, headers: [String: String], body: String?) {
             self.url = url
             self.method = method
             self.headers = headers
@@ -43,14 +43,14 @@ public struct NetworkEvent: Codable, Identifiable, Sendable {
         }
     }
 
-    public struct ResponsePayload: Codable, Sendable {
-        public let statusCode: Int?
-        public let headers: [String: String]
-        public let body: String?
-        public let error: String?
-        public let durationMS: Int
+    struct ResponsePayload: Codable, Sendable {
+        let statusCode: Int?
+        let headers: [String: String]
+        let body: String?
+        let error: String?
+        let durationMS: Int
 
-        public init(statusCode: Int?, headers: [String: String], body: String?, error: String?, durationMS: Int) {
+        init(statusCode: Int?, headers: [String: String], body: String?, error: String?, durationMS: Int) {
             self.statusCode = statusCode
             self.headers = headers
             self.body = body
@@ -59,27 +59,27 @@ public struct NetworkEvent: Codable, Identifiable, Sendable {
         }
     }
 
-    public struct ClientInfo: Codable, Sendable {
-        public let deviceName: String
-        public let appName: String
-        public let bundleIdentifier: String?
+    struct ClientInfo: Codable, Sendable {
+        let deviceName: String
+        let appName: String
+        let bundleIdentifier: String?
 
-        public init(deviceName: String, appName: String, bundleIdentifier: String?) {
+        init(deviceName: String, appName: String, bundleIdentifier: String?) {
             self.deviceName = deviceName
             self.appName = appName
             self.bundleIdentifier = bundleIdentifier
         }
     }
 
-    public let id: UUID
-    public let kind: Kind
-    public let timestamp: Date
-    public let requestID: UUID
-    public let request: RequestPayload
-    public let response: ResponsePayload?
-    public let client: ClientInfo?
+    let id: UUID
+    let kind: Kind
+    let timestamp: Date
+    let requestID: UUID
+    let request: RequestPayload
+    let response: ResponsePayload?
+    let client: ClientInfo?
 
-    public init(
+    init(
         id: UUID = UUID(),
         kind: Kind,
         timestamp: Date = Date(),
