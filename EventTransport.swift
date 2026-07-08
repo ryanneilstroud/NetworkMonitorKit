@@ -83,8 +83,7 @@ actor EventTransport {
 
     private func send(_ event: NetworkEvent, over connection: NWConnection) {
         do {
-            let encoder = JSONEncoder()
-            encoder.dateEncodingStrategy = .iso8601
+            let encoder = Self.makeJSONEncoder()
             let payload = NetworkEvent.NetworkTransportMessage(event: enriched(event))
             try send(payload: payload, over: connection, encoder: encoder, trackedEvent: event)
         } catch {
@@ -94,8 +93,7 @@ actor EventTransport {
 
     private func sendClientHello(over connection: NWConnection) {
         do {
-            let encoder = JSONEncoder()
-            encoder.dateEncodingStrategy = .iso8601
+            let encoder = Self.makeJSONEncoder()
             let payload = NetworkEvent.NetworkTransportMessage(clientHello: clientInfo)
             try send(payload: payload, over: connection, encoder: encoder, trackedEvent: nil)
         } catch {
@@ -181,5 +179,16 @@ actor EventTransport {
             appName: appName,
             bundleIdentifier: bundleIdentifier
         )
+    }
+
+    private nonisolated static func makeJSONEncoder() -> JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            var container = encoder.singleValueContainer()
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            try container.encode(formatter.string(from: date))
+        }
+        return encoder
     }
 }

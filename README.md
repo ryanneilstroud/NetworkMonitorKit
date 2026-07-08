@@ -4,7 +4,15 @@
 
 ## Install
 
+### Swift Package Manager
+
 Add this package as a dependency in Xcode, then include `NetworkMonitorKit` in your app target.
+
+### CocoaPods
+
+```ruby
+pod 'NetworkMonitorKit', :git => 'https://github.com/ryanneilstroud/NetworkMonitorKit.git', :tag => '0.1.0'
+```
 
 ## Usage
 
