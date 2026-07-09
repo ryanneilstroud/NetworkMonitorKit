@@ -36,6 +36,3 @@ public enum Periscope {
         }
     }
 }
-
-@available(*, deprecated, renamed: "Periscope")
-public typealias NetworkMonitor = Periscope
