@@ -2,19 +2,19 @@
 import PackageDescription
 
 let package = Package(
-    name: "NetworkMonitorKit",
+    name: "PeriscopeKit",
     platforms: [
         .iOS(.v15),
         .macOS(.v13)
     ],
     products: [
-        .library(name: "NetworkMonitorKit", targets: ["NetworkMonitorKit"])
+        .library(name: "PeriscopeKit", targets: ["PeriscopeKit"])
     ],
     targets: [
         .target(
-            name: "NetworkMonitorKit",
+            name: "PeriscopeKit",
             path: ".",
-            exclude: ["Package.swift", "README.md"]
+            exclude: ["Package.swift", "README.md", "PeriscopeKit.podspec"]
         )
     ]
 )
