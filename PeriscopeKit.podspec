@@ -1,13 +1,13 @@
 Pod::Spec.new do |s|
-  s.name         = "NetworkMonitorKit"
+  s.name         = "PeriscopeKit"
   s.version      = "0.3.0"
   s.summary      = "Capture URLSession traffic for NetworkMonitor viewers."
-  s.description  = "NetworkMonitorKit captures URLSession events and forwards them to a viewer over TCP."
-  s.homepage     = "https://github.com/ryanneilstroud/NetworkMonitorKit"
+  s.description  = "PeriscopeKit captures URLSession events and forwards them to a viewer over TCP."
+  s.homepage     = "https://github.com/ryanneilstroud/PeriscopeKit"
   s.license      = { :type => "MIT" }
   s.author       = { "ryanneilstroud" => "ryanneilstroud@users.noreply.github.com" }
   s.platforms    = { :ios => "15.0" }
-  s.source       = { :git => "https://github.com/ryanneilstroud/NetworkMonitorKit.git", :tag => s.version.to_s }
+  s.source       = { :git => "https://github.com/ryanneilstroud/PeriscopeKit.git", :tag => s.version.to_s }
 
   s.source_files = "*.{swift}"
   s.exclude_files = "Package.swift"

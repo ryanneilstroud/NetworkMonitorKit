@@ -40,7 +40,7 @@ final class MonitorURLProtocol: URLProtocol {
             headers: forwardedRequest.allHTTPHeaderFields ?? [:],
             body: decodeBody(forwardedRequest.httpBody)
         )
-        NetworkMonitor.emit(
+        Periscope.emit(
             NetworkEvent(kind: .started, requestID: requestID, request: requestPayload, response: nil)
         )
 
@@ -67,7 +67,7 @@ final class MonitorURLProtocol: URLProtocol {
                 error: error?.localizedDescription,
                 durationMS: self.durationMS()
             )
-            NetworkMonitor.emit(
+            Periscope.emit(
                 NetworkEvent(kind: .completed, requestID: requestID, request: requestPayload, response: responsePayload)
             )
 

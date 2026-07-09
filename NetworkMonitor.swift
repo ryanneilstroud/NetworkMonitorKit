@@ -1,6 +1,6 @@
 import Foundation
 
-public enum NetworkMonitor {
+public enum Periscope {
     private static var configured = false
 
     public static func observe(host: String = "localhost", port: UInt16 = 61337) {
@@ -41,3 +41,6 @@ public enum NetworkMonitor {
         }
     }
 }
+
+@available(*, deprecated, renamed: "Periscope")
+public typealias NetworkMonitor = Periscope
