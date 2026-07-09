@@ -3,18 +3,13 @@ import Foundation
 public enum Periscope {
     private static var configured = false
 
-    public static func observe(host: String = "localhost", port: UInt16 = 61337) {
+    public static func capture(host: String = "localhost", port: UInt16 = 61337) {
         guard !configured else { return }
         configured = true
         URLProtocol.registerClass(MonitorURLProtocol.self)
         Task {
             await EventTransport.shared.configure(host: host, port: port)
         }
-    }
-
-    @available(*, deprecated, renamed: "observe(host:port:)")
-    public static func start(host: String = "localhost", port: UInt16 = 61337) {
-        observe(host: host, port: port)
     }
 
     public static func stop() {
@@ -41,6 +36,3 @@ public enum Periscope {
         }
     }
 }
-
-@available(*, deprecated, renamed: "Periscope")
-public typealias NetworkMonitor = Periscope

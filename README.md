@@ -19,7 +19,7 @@ pod 'PeriscopeKit', :git => 'https://github.com/ryanneilstroud/PeriscopeKit.git'
 ```swift
 import PeriscopeKit
 
-Periscope.observe(port: 61337) // host defaults to localhost
+Periscope.capture(port: 61337) // host defaults to localhost
 ```
 
 If you create custom `URLSessionConfiguration` instances:
