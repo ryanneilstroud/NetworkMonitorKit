@@ -12,16 +12,6 @@ public enum Periscope {
         }
     }
 
-    @available(*, deprecated, renamed: "capture(host:port:)")
-    public static func observe(host: String = "localhost", port: UInt16 = 61337) {
-        capture(host: host, port: port)
-    }
-
-    @available(*, deprecated, renamed: "capture(host:port:)")
-    public static func start(host: String = "localhost", port: UInt16 = 61337) {
-        capture(host: host, port: port)
-    }
-
     public static func stop() {
         URLProtocol.unregisterClass(MonitorURLProtocol.self)
         Task {
