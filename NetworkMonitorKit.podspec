@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "NetworkMonitorKit"
-  s.version      = "0.1.0"
+  s.version      = "0.3.0"
   s.summary      = "Capture URLSession traffic for NetworkMonitor viewers."
   s.description  = "NetworkMonitorKit captures URLSession events and forwards them to a viewer over TCP."
   s.homepage     = "https://github.com/ryanneilstroud/NetworkMonitorKit"

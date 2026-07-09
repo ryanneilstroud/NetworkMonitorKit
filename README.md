@@ -11,7 +11,7 @@ Add this package as a dependency in Xcode, then include `NetworkMonitorKit` in y
 ### CocoaPods
 
 ```ruby
-pod 'NetworkMonitorKit', :git => 'https://github.com/ryanneilstroud/NetworkMonitorKit.git', :tag => '0.1.0'
+pod 'NetworkMonitorKit', :git => 'https://github.com/ryanneilstroud/NetworkMonitorKit.git', :tag => '0.3.0'
 ```
 
 ## Usage
@@ -19,7 +19,7 @@ pod 'NetworkMonitorKit', :git => 'https://github.com/ryanneilstroud/NetworkMonit
 ```swift
 import NetworkMonitorKit
 
-NetworkMonitor.start(port: 61337) // host defaults to localhost
+NetworkMonitor.observe(port: 61337) // host defaults to localhost
 ```
 
 If you create custom `URLSessionConfiguration` instances:
