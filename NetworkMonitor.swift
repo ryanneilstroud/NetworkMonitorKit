@@ -18,6 +18,10 @@ public final class Periscope {
         public static func simulator(port: Int = 61337) -> Receiver {
             device(host: "localhost", port: port)
         }
+
+        public static var simulator: Receiver {
+            simulator()
+        }
     }
 
     public static let `default` = Periscope()
