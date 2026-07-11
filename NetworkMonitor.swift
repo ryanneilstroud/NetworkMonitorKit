@@ -21,18 +21,18 @@ public final class Periscope {
     }
 
     public static let `default` = Periscope()
-    private let stateLock = NSLock()
-    private var isConfigured = false
+    private static let globalStateLock = NSLock()
+    private static var isAnyCaptureConfigured = false
 
     public init() {}
 
     public func capture(for receiver: Receiver) {
-        stateLock.lock()
-        let canConfigure = !isConfigured
+        Self.globalStateLock.lock()
+        let canConfigure = !Self.isAnyCaptureConfigured
         if canConfigure {
-            isConfigured = true
+            Self.isAnyCaptureConfigured = true
         }
-        stateLock.unlock()
+        Self.globalStateLock.unlock()
         guard canConfigure else { return }
 
         URLProtocol.registerClass(MonitorURLProtocol.self)
@@ -42,10 +42,10 @@ public final class Periscope {
     }
 
     public func stop() {
-        stateLock.lock()
-        let wasConfigured = isConfigured
-        isConfigured = false
-        stateLock.unlock()
+        Self.globalStateLock.lock()
+        let wasConfigured = Self.isAnyCaptureConfigured
+        Self.isAnyCaptureConfigured = false
+        Self.globalStateLock.unlock()
         guard wasConfigured else { return }
 
         URLProtocol.unregisterClass(MonitorURLProtocol.self)

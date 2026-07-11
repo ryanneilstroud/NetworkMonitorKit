@@ -5,6 +5,7 @@ final class MonitorURLProtocol: URLProtocol {
     private static let requestIDKey = "NetworkMonitorRequestIDKey"
 
     private var dataTask: URLSessionDataTask?
+    private var session: URLSession?
     private var startedAt: Date?
     private var responseData = Data()
 
@@ -23,13 +24,10 @@ final class MonitorURLProtocol: URLProtocol {
         startedAt = Date()
         let requestID = UUID()
 
-        let mutableRequest = (request as NSURLRequest).mutableCopy() as? NSMutableURLRequest ?? NSMutableURLRequest()
-        mutableRequest.url = request.url
-        if let method = request.httpMethod {
-            mutableRequest.httpMethod = method
+        guard let mutableRequest = (request as NSURLRequest).mutableCopy() as? NSMutableURLRequest else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+            return
         }
-        mutableRequest.allHTTPHeaderFields = request.allHTTPHeaderFields
-        mutableRequest.httpBody = request.httpBody
         URLProtocol.setProperty(true, forKey: Self.handledKey, in: mutableRequest)
         URLProtocol.setProperty(requestID.uuidString, forKey: Self.requestIDKey, in: mutableRequest)
         let forwardedRequest = mutableRequest as URLRequest
@@ -50,8 +48,11 @@ final class MonitorURLProtocol: URLProtocol {
         configuration.protocolClasses = protocolClasses
 
         let session = URLSession(configuration: configuration, delegate: nil, delegateQueue: nil)
+        self.session = session
         dataTask = session.dataTask(with: forwardedRequest) { [weak self] data, response, error in
+            defer { session.finishTasksAndInvalidate() }
             guard let self else { return }
+            self.session = nil
             if let response {
                 self.client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
             }
@@ -83,6 +84,8 @@ final class MonitorURLProtocol: URLProtocol {
     override func stopLoading() {
         dataTask?.cancel()
         dataTask = nil
+        session?.invalidateAndCancel()
+        session = nil
     }
 
     private func durationMS() -> Int {

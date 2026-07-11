@@ -6,6 +6,7 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/ryanneilstroud/PeriscopeKit"
   s.license      = { :type => "MIT" }
   s.author       = { "ryanneilstroud" => "ryanneilstroud@users.noreply.github.com" }
+  # CocoaPods distribution is currently iOS-only. SwiftPM supports iOS and macOS.
   s.platforms    = { :ios => "15.0" }
   s.source       = { :git => "https://github.com/ryanneilstroud/PeriscopeKit.git", :tag => s.version.to_s }
 

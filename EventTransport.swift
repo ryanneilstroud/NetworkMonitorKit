@@ -16,6 +16,11 @@ actor EventTransport {
     private var pendingEvents: [NetworkEvent] = []
     private let maxPendingEvents = 500
     private let clientInfo = EventTransport.makeClientInfo()
+    private static let iso8601Formatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
 
     func configure(host: String, port: UInt16) {
         self.host = host
@@ -118,8 +123,7 @@ actor EventTransport {
     }
 
     private func handleSendCompletion(error: NWError?, event: NetworkEvent?, over connection: NWConnection) {
-        guard let error else { return }
-        _ = error
+        guard error != nil else { return }
         guard self.connection === connection else { return }
         if let event {
             enqueue(event)
@@ -167,7 +171,12 @@ actor EventTransport {
         let bundleIdentifier = Bundle.main.bundleIdentifier
 
         #if canImport(UIKit)
-        let deviceName = UIDevice.current.name
+        let deviceName: String
+        if Thread.isMainThread {
+            deviceName = UIDevice.current.name
+        } else {
+            deviceName = DispatchQueue.main.sync { UIDevice.current.name }
+        }
         #elseif canImport(AppKit)
         let deviceName = Host.current().localizedName ?? ProcessInfo.processInfo.hostName
         #else
@@ -181,13 +190,11 @@ actor EventTransport {
         )
     }
 
-    private nonisolated static func makeJSONEncoder() -> JSONEncoder {
+    private static func makeJSONEncoder() -> JSONEncoder {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .custom { date, encoder in
             var container = encoder.singleValueContainer()
-            let formatter = ISO8601DateFormatter()
-            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-            try container.encode(formatter.string(from: date))
+            try container.encode(Self.iso8601Formatter.string(from: date))
         }
         return encoder
     }

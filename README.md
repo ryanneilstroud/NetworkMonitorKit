@@ -29,6 +29,8 @@ let periscope = Periscope()
 periscope.capture(for: .simulator())
 ```
 
+Capture transport is process-wide. If multiple `Periscope` instances call `capture(for:)`, only the first active capture session is applied until `stop()` is called.
+
 ### Receiver constructors
 
 `Periscope.Receiver` has two static constructors:
