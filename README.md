@@ -11,7 +11,7 @@ Add this package as a dependency in Xcode, then include `PeriscopeKit` in your a
 ### CocoaPods
 
 ```ruby
-pod 'PeriscopeKit', :git => 'https://github.com/ryanneilstroud/PeriscopeKit.git', :tag => '0.3.0'
+pod 'PeriscopeKit', :git => 'https://github.com/ryanneilstroud/PeriscopeKit.git', :tag => '0.5.0'
 ```
 
 ## Usage
@@ -19,7 +19,9 @@ pod 'PeriscopeKit', :git => 'https://github.com/ryanneilstroud/PeriscopeKit.git'
 ```swift
 import PeriscopeKit
 
-Periscope.capture(port: 61337) // host defaults to localhost
+Periscope.capture(
+    for: .device(host: "localhost") // port defaults to 61337
+)
 ```
 
 If you create custom `URLSessionConfiguration` instances:
