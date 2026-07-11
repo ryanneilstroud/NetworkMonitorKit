@@ -20,8 +20,45 @@ pod 'PeriscopeKit', :git => 'https://github.com/ryanneilstroud/PeriscopeKit.git'
 import PeriscopeKit
 
 Periscope.capture(
-    for: .device(host: "localhost") // port defaults to 61337
+    for: .localhost() // defaults to localhost:61337
 )
+```
+
+### Receiver constructors
+
+`Periscope.Receiver` has two static constructors:
+
+1. `Receiver.localhost(port:)` for local development (simulator or Mac app targets).
+2. `Receiver.device(host:port:)` for explicit host routing, especially physical devices.
+
+```swift
+// Local development (simulator/Mac target)
+Periscope.capture(
+    for: .localhost()
+)
+
+// Physical device targeting your Mac's LAN IP
+Periscope.capture(
+    for: .device(host: "192.168.1.25")
+)
+```
+
+Both methods default to port `61337`.
+
+### Stop capture
+
+When you need to stop forwarding events:
+
+```swift
+Periscope.stop()
+```
+
+### API change in 0.5.0
+
+`capture(host:port:)` was removed in `0.5.0` in favor of the receiver-based API:
+
+```swift
+Periscope.capture(for: .localhost())
 ```
 
 If you create custom `URLSessionConfiguration` instances:
