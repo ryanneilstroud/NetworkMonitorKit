@@ -15,26 +15,20 @@ public enum Periscope {
             return Receiver(host: host, port: UInt16(port))
         }
 
-        public static func localhost(port: Int = 61337) -> Receiver {
+        public static func simulator(port: Int = 61337) -> Receiver {
             device(host: "localhost", port: port)
         }
     }
 
     private static var configured = false
 
-    public static func capture(for receivers: Receiver...) {
-        guard !receivers.isEmpty else { return }
-        capture(for: receivers)
-    }
-
-    public static func capture(for receivers: [Receiver]) {
+    public static func capture(for receiver: Receiver) {
         guard !configured else { return }
-        guard let primaryReceiver = receivers.first else { return }
 
         configured = true
         URLProtocol.registerClass(MonitorURLProtocol.self)
         Task {
-            await EventTransport.shared.configure(host: primaryReceiver.host, port: primaryReceiver.port)
+            await EventTransport.shared.configure(host: receiver.host, port: receiver.port)
         }
     }
 
