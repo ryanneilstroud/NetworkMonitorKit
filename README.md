@@ -14,13 +14,15 @@ Add this package as a dependency in Xcode, then include `PeriscopeKit` in your a
 pod 'PeriscopeKit', :git => 'https://github.com/ryanneilstroud/PeriscopeKit.git', :tag => '0.5.0'
 ```
 
-## Usage
+## Quick Start
 
 ```swift
 import PeriscopeKit
 
-Periscope.capture(for: .simulator()) // uses Periscope.default
+Periscope.capture(for: .simulator())
 ```
+
+## Usage
 
 You can also create your own instance:
 
