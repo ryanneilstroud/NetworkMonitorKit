@@ -1,6 +1,6 @@
 import Foundation
 
-public enum Periscope {
+public final class Periscope {
     public struct Receiver: Sendable, Hashable {
         let host: String
         let port: UInt16
@@ -20,34 +20,60 @@ public enum Periscope {
         }
     }
 
-    private static var configured = false
+    public static let `default` = Periscope()
+    private let stateLock = NSLock()
+    private var isConfigured = false
 
-    public static func capture(for receiver: Receiver) {
-        guard !configured else { return }
+    public init() {}
 
-        configured = true
+    public func capture(for receiver: Receiver) {
+        stateLock.lock()
+        let canConfigure = !isConfigured
+        if canConfigure {
+            isConfigured = true
+        }
+        stateLock.unlock()
+        guard canConfigure else { return }
+
         URLProtocol.registerClass(MonitorURLProtocol.self)
         Task {
             await EventTransport.shared.configure(host: receiver.host, port: receiver.port)
         }
     }
 
-    public static func stop() {
+    public func stop() {
+        stateLock.lock()
+        let wasConfigured = isConfigured
+        isConfigured = false
+        stateLock.unlock()
+        guard wasConfigured else { return }
+
         URLProtocol.unregisterClass(MonitorURLProtocol.self)
         Task {
             await EventTransport.shared.stop()
         }
-        configured = false
     }
 
     // Use this helper for explicit session setups where URLProtocol registration
     // doesn't get inherited automatically.
-    public static func inject(into configuration: URLSessionConfiguration) {
+    public func inject(into configuration: URLSessionConfiguration) {
         var protocolClasses = configuration.protocolClasses ?? []
         if !protocolClasses.contains(where: { $0 == MonitorURLProtocol.self }) {
             protocolClasses.insert(MonitorURLProtocol.self, at: 0)
         }
         configuration.protocolClasses = protocolClasses
+    }
+
+    public static func capture(for receiver: Receiver) {
+        Self.default.capture(for: receiver)
+    }
+
+    public static func stop() {
+        Self.default.stop()
+    }
+
+    public static func inject(into configuration: URLSessionConfiguration) {
+        Self.default.inject(into: configuration)
     }
 
     static func emit(_ event: NetworkEvent) {

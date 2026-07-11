@@ -19,9 +19,14 @@ pod 'PeriscopeKit', :git => 'https://github.com/ryanneilstroud/PeriscopeKit.git'
 ```swift
 import PeriscopeKit
 
-Periscope.capture(
-    for: .simulator() // defaults to localhost:61337
-)
+Periscope.capture(for: .simulator()) // uses Periscope.default
+```
+
+You can also create your own instance:
+
+```swift
+let periscope = Periscope()
+periscope.capture(for: .simulator())
 ```
 
 ### Receiver constructors
@@ -33,14 +38,10 @@ Periscope.capture(
 
 ```swift
 // Local simulator development
-Periscope.capture(
-    for: .simulator()
-)
+Periscope.capture(for: .simulator())
 
 // Physical device targeting your Mac's LAN IP
-Periscope.capture(
-    for: .device(host: "192.168.1.25")
-)
+Periscope.capture(for: .device(host: "192.168.1.25"))
 ```
 
 Both methods default to port `61337`.
@@ -50,7 +51,7 @@ Both methods default to port `61337`.
 When you need to stop forwarding events:
 
 ```swift
-Periscope.stop()
+Periscope.stop() // stops Periscope.default
 ```
 
 ### API change in 0.5.0
