@@ -30,13 +30,14 @@ final class MonitorURLProtocol: URLProtocol {
         }
         URLProtocol.setProperty(true, forKey: Self.handledKey, in: mutableRequest)
         URLProtocol.setProperty(requestID.uuidString, forKey: Self.requestIDKey, in: mutableRequest)
+        let requestBodyData = materializeRequestBody(from: mutableRequest)
         let forwardedRequest = mutableRequest as URLRequest
 
         let requestPayload = NetworkEvent.RequestPayload(
             url: forwardedRequest.url?.absoluteString ?? "<unknown>",
             method: forwardedRequest.httpMethod ?? "GET",
             headers: forwardedRequest.allHTTPHeaderFields ?? [:],
-            body: decodeBody(forwardedRequest.httpBody)
+            body: decodeBody(requestBodyData)
         )
         Periscope.emit(
             NetworkEvent(kind: .started, requestID: requestID, request: requestPayload, response: nil)
@@ -91,5 +92,37 @@ final class MonitorURLProtocol: URLProtocol {
     private func durationMS() -> Int {
         guard let startedAt else { return 0 }
         return Int(Date().timeIntervalSince(startedAt) * 1000.0)
+    }
+
+    private func materializeRequestBody(from request: NSMutableURLRequest) -> Data? {
+        if let body = request.httpBody, body.isEmpty == false {
+            return body
+        }
+        guard let stream = request.httpBodyStream else { return nil }
+        guard let streamBody = readData(from: stream), streamBody.isEmpty == false else { return nil }
+
+        // Replace stream body with concrete data so URLSession can still send the payload after inspection.
+        request.httpBodyStream = nil
+        request.httpBody = streamBody
+        return streamBody
+    }
+
+    private func readData(from stream: InputStream) -> Data? {
+        stream.open()
+        defer { stream.close() }
+
+        var data = Data()
+        var buffer = [UInt8](repeating: 0, count: 4096)
+        while stream.hasBytesAvailable {
+            let bytesRead = stream.read(&buffer, maxLength: buffer.count)
+            if bytesRead < 0 {
+                return nil
+            }
+            if bytesRead == 0 {
+                break
+            }
+            data.append(buffer, count: bytesRead)
+        }
+        return data
     }
 }
