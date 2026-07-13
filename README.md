@@ -11,7 +11,7 @@ Add this package as a dependency in Xcode, then include `PeriscopeKit` in your a
 ### CocoaPods
 
 ```ruby
-pod 'PeriscopeKit', :git => 'https://github.com/ryanneilstroud/PeriscopeKit.git', :tag => '0.5.1'
+pod 'PeriscopeKit', :git => 'https://github.com/ryanneilstroud/PeriscopeKit.git', :tag => '0.5.2'
 ```
 
 ## Quick Start
