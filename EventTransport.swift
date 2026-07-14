@@ -15,6 +15,10 @@ actor EventTransport {
     private var port: UInt16?
     private var pendingEvents: [NetworkEvent] = []
     private let maxPendingEvents = 500
+    private var reconnectTask: Task<Void, Never>?
+    private var reconnectAttempt = 0
+    private var pathMonitor: NWPathMonitor?
+    private var hasStartedPathMonitor = false
     private let clientInfo = EventTransport.makeClientInfo()
     private static let iso8601Formatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
@@ -23,8 +27,12 @@ actor EventTransport {
     }()
 
     func configure(host: String, port: UInt16) {
+        ensurePathMonitorStarted()
         self.host = host
         self.port = port
+        reconnectTask?.cancel()
+        reconnectTask = nil
+        reconnectAttempt = 0
         connectIfNeeded(forceNew: true)
     }
 
@@ -32,6 +40,7 @@ actor EventTransport {
         if !isReady || connection == nil {
             enqueue(event)
             connectIfNeeded(forceNew: false)
+            scheduleReconnectIfNeeded()
             return
         }
         guard let connection else { return }
@@ -39,6 +48,9 @@ actor EventTransport {
     }
 
     func stop() {
+        reconnectTask?.cancel()
+        reconnectTask = nil
+        reconnectAttempt = 0
         connection?.cancel()
         connection = nil
         isReady = false
@@ -46,7 +58,10 @@ actor EventTransport {
 
     private func connectIfNeeded(forceNew: Bool) {
         guard let host, let port else { return }
-        if !forceNew, connection != nil { return }
+        if !forceNew {
+            if connection != nil { return }
+            if reconnectTask != nil { return }
+        }
 
         connection?.cancel()
         isReady = false
@@ -60,6 +75,8 @@ actor EventTransport {
                 switch state {
                 case .ready:
                     await self.setReady(true, for: connection)
+                case .waiting:
+                    await self.handleWaiting(connection)
                 case .cancelled, .failed:
                     await self.handleDisconnected(connection)
                 default:
@@ -71,19 +88,43 @@ actor EventTransport {
         self.connection = connection
     }
 
+    private func ensurePathMonitorStarted() {
+        guard !hasStartedPathMonitor else { return }
+        let monitor = NWPathMonitor()
+        monitor.pathUpdateHandler = { [weak self] path in
+            guard path.status == .satisfied else { return }
+            Task {
+                await self?.handlePathSatisfied()
+            }
+        }
+        monitor.start(queue: .global())
+        pathMonitor = monitor
+        hasStartedPathMonitor = true
+    }
+
     private func setReady(_ value: Bool, for connection: NWConnection) {
         guard self.connection === connection else { return }
         isReady = value
         if value {
+            reconnectTask?.cancel()
+            reconnectTask = nil
+            reconnectAttempt = 0
             sendClientHello(over: connection)
             flushPending(over: connection)
         }
+    }
+
+    private func handleWaiting(_ connection: NWConnection) {
+        guard self.connection === connection else { return }
+        isReady = false
+        scheduleReconnectIfNeeded()
     }
 
     private func handleDisconnected(_ connection: NWConnection) {
         guard self.connection === connection else { return }
         self.connection = nil
         isReady = false
+        scheduleReconnectIfNeeded()
     }
 
     private func send(_ event: NetworkEvent, over connection: NWConnection) {
@@ -131,7 +172,7 @@ actor EventTransport {
         connection.cancel()
         self.connection = nil
         isReady = false
-        connectIfNeeded(forceNew: false)
+        scheduleReconnect(forceNow: true)
     }
 
     private func enqueue(_ event: NetworkEvent) {
@@ -148,6 +189,50 @@ actor EventTransport {
         for event in buffered {
             send(event, over: connection)
         }
+    }
+
+    private func handlePathSatisfied() {
+        guard host != nil, port != nil else { return }
+        guard !isReady || connection == nil else { return }
+        scheduleReconnect(forceNow: true)
+    }
+
+    private func scheduleReconnectIfNeeded() {
+        guard host != nil, port != nil else { return }
+        guard !isReady else { return }
+        scheduleReconnect(forceNow: false)
+    }
+
+    private func scheduleReconnect(forceNow: Bool) {
+        guard host != nil, port != nil else { return }
+
+        if forceNow {
+            reconnectTask?.cancel()
+            reconnectTask = nil
+            reconnectAttempt = 0
+            connectIfNeeded(forceNew: true)
+            return
+        }
+
+        guard reconnectTask == nil else { return }
+        let delayNanoseconds = reconnectDelayNanoseconds(for: reconnectAttempt)
+        reconnectAttempt += 1
+        reconnectTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: delayNanoseconds)
+            await self?.performScheduledReconnect()
+        }
+    }
+
+    private func performScheduledReconnect() {
+        reconnectTask = nil
+        guard !isReady else { return }
+        connectIfNeeded(forceNew: true)
+    }
+
+    private func reconnectDelayNanoseconds(for attempt: Int) -> UInt64 {
+        let exponent = min(attempt, 5)
+        let delayMilliseconds = min(250 * (1 << exponent), 8_000)
+        return UInt64(delayMilliseconds) * 1_000_000
     }
 
     private func enriched(_ event: NetworkEvent) -> NetworkEvent {
