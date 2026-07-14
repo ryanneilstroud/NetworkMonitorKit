@@ -19,6 +19,8 @@ actor EventTransport {
     private var reconnectAttempt = 0
     private var pathMonitor: NWPathMonitor?
     private var hasStartedPathMonitor = false
+    private var isNetworkPathSatisfied = true
+    private var hasObservedUnsatisfiedPath = false
     private let clientInfo = EventTransport.makeClientInfo()
     private static let iso8601Formatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
@@ -92,9 +94,8 @@ actor EventTransport {
         guard !hasStartedPathMonitor else { return }
         let monitor = NWPathMonitor()
         monitor.pathUpdateHandler = { [weak self] path in
-            guard path.status == .satisfied else { return }
             Task {
-                await self?.handlePathSatisfied()
+                await self?.handlePathUpdate(path.status)
             }
         }
         monitor.start(queue: .global())
@@ -191,15 +192,39 @@ actor EventTransport {
         }
     }
 
-    private func handlePathSatisfied() {
-        guard host != nil, port != nil else { return }
-        guard !isReady || connection == nil else { return }
-        scheduleReconnect(forceNow: true)
+    private func handlePathUpdate(_ status: NWPath.Status) {
+        switch status {
+        case .satisfied:
+            isNetworkPathSatisfied = true
+            guard host != nil, port != nil else { return }
+            if hasObservedUnsatisfiedPath {
+                hasObservedUnsatisfiedPath = false
+                connection?.cancel()
+                connection = nil
+                isReady = false
+                scheduleReconnect(forceNow: true)
+                return
+            }
+
+            guard !isReady || connection == nil else { return }
+            scheduleReconnect(forceNow: true)
+        case .requiresConnection, .unsatisfied:
+            isNetworkPathSatisfied = false
+            hasObservedUnsatisfiedPath = true
+            isReady = false
+            connection?.cancel()
+            connection = nil
+            reconnectTask?.cancel()
+            reconnectTask = nil
+        @unknown default:
+            break
+        }
     }
 
     private func scheduleReconnectIfNeeded() {
         guard host != nil, port != nil else { return }
         guard !isReady else { return }
+        guard isNetworkPathSatisfied else { return }
         scheduleReconnect(forceNow: false)
     }
 
