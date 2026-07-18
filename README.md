@@ -14,20 +14,6 @@ Add this package as a dependency in Xcode, then include `PeriscopeKit` in your a
 pod 'PeriscopeKit', :git => 'https://github.com/ryanneilstroud/PeriscopeKit.git', :tag => 'v0.5.5'
 ```
 
-For podspec validation/publishing (`pod spec lint`, `pod trunk push`), use full Xcode (not only Command Line Tools) so `simctl` is available:
-
-```bash
-xcode-select -p
-xcrun --find simctl
-```
-
-If `simctl` is missing, install/open Xcode and select its developer directory:
-
-```bash
-sudo xcode-select -s "/Applications/<Your-Xcode-App>.app/Contents/Developer"
-sudo xcodebuild -runFirstLaunch
-```
-
 ## Quick Start
 
 ```swift
