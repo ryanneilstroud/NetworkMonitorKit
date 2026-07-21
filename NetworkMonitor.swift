@@ -40,6 +40,8 @@ public final class Periscope {
         guard canConfigure else { return }
 
         URLProtocol.registerClass(MonitorURLProtocol.self)
+        _ = ObjectiveCWebSocketCaptureInstaller.shared.install()
+        WebSocketCaptureCoordinator.shared.enable()
         Task {
             await EventTransport.shared.configure(host: receiver.host, port: receiver.port)
         }
@@ -53,6 +55,7 @@ public final class Periscope {
         guard wasConfigured else { return }
 
         URLProtocol.unregisterClass(MonitorURLProtocol.self)
+        WebSocketCaptureCoordinator.shared.disable()
         Task {
             await EventTransport.shared.stop()
         }
@@ -78,6 +81,14 @@ public final class Periscope {
 
     public static func inject(into configuration: URLSessionConfiguration) {
         Self.default.inject(into: configuration)
+    }
+
+    public var webSocketCaptureAvailability: WebSocketCaptureAvailability {
+        ObjectiveCWebSocketCaptureInstaller.shared.availability
+    }
+
+    public static var webSocketCaptureAvailability: WebSocketCaptureAvailability {
+        Self.default.webSocketCaptureAvailability
     }
 
     static func emit(_ event: NetworkEvent) {

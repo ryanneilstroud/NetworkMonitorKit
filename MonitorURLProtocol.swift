@@ -13,7 +13,17 @@ final class MonitorURLProtocol: URLProtocol {
         guard URLProtocol.property(forKey: handledKey, in: request) == nil else {
             return false
         }
-        return true
+        guard let scheme = request.url?.scheme?.lowercased(),
+              scheme == "http" || scheme == "https" else {
+            return false
+        }
+
+        // A WebSocket starts as an HTTP upgrade, but forwarding that handshake
+        // through a data task produces a 101 response without preserving the
+        // upgraded connection. Native WebSocket capture owns this path.
+        let isWebSocketUpgrade = request.value(forHTTPHeaderField: "Upgrade")?
+            .caseInsensitiveCompare("websocket") == .orderedSame
+        return !isWebSocketUpgrade
     }
 
     override class func canonicalRequest(for request: URLRequest) -> URLRequest {

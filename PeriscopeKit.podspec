@@ -1,8 +1,8 @@
 Pod::Spec.new do |s|
   s.name         = "PeriscopeKit"
-  s.version      = "0.5.5"
-  s.summary      = "Capture URLSession traffic for NetworkMonitor viewers."
-  s.description  = "PeriscopeKit captures URLSession events and forwards them to a viewer over TCP."
+  s.version      = "1.2.0"
+  s.summary      = "Capture URLSession traffic for Periscope viewers."
+  s.description  = "PeriscopeKit captures URLSession HTTP and native WebSocket activity for Periscope viewers."
   s.homepage     = "https://github.com/ryanneilstroud/PeriscopeKit"
   s.license      = { :type => "MIT", :file => "LICENSE" }
   s.author       = { "ryanneilstroud" => "ryanneilstroud@users.noreply.github.com" }

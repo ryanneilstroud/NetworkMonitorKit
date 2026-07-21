@@ -14,7 +14,7 @@ let package = Package(
         .target(
             name: "PeriscopeKit",
             path: ".",
-            exclude: ["Package.swift", "README.md", "PeriscopeKit.podspec", "Tests"]
+            exclude: ["Package.swift", "README.md", "PeriscopeKit.podspec", "LICENSE", "Tests"]
         ),
         .testTarget(
             name: "PeriscopeKitTests",

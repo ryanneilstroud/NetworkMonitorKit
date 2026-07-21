@@ -1,6 +1,7 @@
 # PeriscopeKit
 
-`PeriscopeKit` captures `URLSession` traffic and forwards events to a network monitor viewer.
+`PeriscopeKit` captures `URLSession` HTTP traffic and can automatically observe native
+`URLSessionWebSocketTask` activity for debugging.
 
 ## Install
 
@@ -11,7 +12,7 @@ Add this package as a dependency in Xcode, then include `PeriscopeKit` in your a
 ### CocoaPods
 
 ```ruby
-pod 'PeriscopeKit', :git => 'https://github.com/ryanneilstroud/PeriscopeKit.git', :tag => 'v0.5.5'
+pod 'PeriscopeKit', :git => 'https://github.com/ryanneilstroud/PeriscopeKit.git', :tag => 'v1.2.0'
 ```
 
 ## Quick Start
@@ -21,6 +22,15 @@ import PeriscopeKit
 
 Periscope.capture(for: .simulator) // uses Periscope.default
 ```
+
+Calling `capture(for:)` also installs automatic native WebSocket observation when
+the current Foundation runtime is supported. Existing `URLSessionWebSocketTask`
+construction and send/receive calls do not need to change. Query
+`Periscope.webSocketCaptureAvailability` to diagnose runtime compatibility.
+
+The initial WebSocket proof of concept observes application-level text and binary
+messages from Apple's native WebSocket task. It does not observe Starscream,
+Socket.IO, `NWConnection`, WebKit, raw frames, or TCP packets.
 
 ## Usage
 
