@@ -10,22 +10,33 @@ struct NetworkEvent: Codable, Identifiable, Sendable {
         enum MessageType: String, Codable, Sendable {
             case event
             case clientHello
+            case socketEvent
         }
 
         let type: MessageType
         let event: NetworkEvent?
         let client: NetworkEvent.ClientInfo?
+        let socketEvent: SocketTransportEvent?
 
         init(event: NetworkEvent) {
             self.type = .event
             self.event = event
             self.client = nil
+            self.socketEvent = nil
         }
 
         init(clientHello client: NetworkEvent.ClientInfo) {
             self.type = .clientHello
             self.event = nil
             self.client = client
+            self.socketEvent = nil
+        }
+
+        init(socketEvent: SocketTransportEvent) {
+            self.type = .socketEvent
+            self.event = nil
+            self.client = nil
+            self.socketEvent = socketEvent
         }
     }
 

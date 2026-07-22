@@ -41,7 +41,7 @@ public final class Periscope {
 
         URLProtocol.registerClass(MonitorURLProtocol.self)
         _ = ObjectiveCWebSocketCaptureInstaller.shared.install()
-        WebSocketCaptureCoordinator.shared.enable()
+        WebSocketCaptureCoordinator.shared.enable(recorder: TransportSocketEventRecorder())
         Task {
             await EventTransport.shared.configure(host: receiver.host, port: receiver.port)
         }

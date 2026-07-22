@@ -48,7 +48,7 @@ struct WebSocketCaptureCoordinatorTests {
         coordinator.recordPing(for: task)
 
         // Then
-        #expect(recorder.events.map(\.kind) == [.resumed, .ping, .ping])
+        #expect(recorder.events.map(\.kind) == [.created, .resumed, .ping, .ping])
     }
 
     @Test("does not record while disabled")

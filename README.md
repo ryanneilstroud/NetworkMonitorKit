@@ -31,6 +31,9 @@ construction and send/receive calls do not need to change. Query
 The initial WebSocket proof of concept observes application-level text and binary
 messages from Apple's native WebSocket task. It does not observe Starscream,
 Socket.IO, `NWConnection`, WebKit, raw frames, or TCP packets.
+Captured native WebSocket lifecycle and message events are delivered to compatible
+Periscope 1.2 viewers. Message payloads are limited to 64 KiB per event; the
+original byte count and truncation state are retained.
 
 ## Usage
 

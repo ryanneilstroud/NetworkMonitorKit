@@ -7,13 +7,18 @@ import AppKit
 #endif
 
 actor EventTransport {
+    private enum PendingEvent: Sendable {
+        case network(NetworkEvent)
+        case socket(SocketTransportEvent)
+    }
+
     static let shared = EventTransport()
 
     private var connection: NWConnection?
     private var isReady = false
     private var host: String?
     private var port: UInt16?
-    private var pendingEvents: [NetworkEvent] = []
+    private var pendingEvents: [PendingEvent] = []
     private let maxPendingEvents = 500
     private var reconnectTask: Task<Void, Never>?
     private var reconnectAttempt = 0
@@ -39,6 +44,14 @@ actor EventTransport {
     }
 
     func send(_ event: NetworkEvent) async {
+        send(.network(event))
+    }
+
+    func send(_ event: SocketTransportEvent) async {
+        send(.socket(event))
+    }
+
+    private func send(_ event: PendingEvent) {
         if !isReady || connection == nil {
             enqueue(event)
             connectIfNeeded(forceNew: false)
@@ -128,10 +141,16 @@ actor EventTransport {
         scheduleReconnectIfNeeded()
     }
 
-    private func send(_ event: NetworkEvent, over connection: NWConnection) {
+    private func send(_ event: PendingEvent, over connection: NWConnection) {
         do {
             let encoder = Self.makeJSONEncoder()
-            let payload = NetworkEvent.NetworkTransportMessage(event: enriched(event))
+            let payload: NetworkEvent.NetworkTransportMessage
+            switch event {
+            case .network(let networkEvent):
+                payload = NetworkEvent.NetworkTransportMessage(event: enriched(networkEvent))
+            case .socket(let socketEvent):
+                payload = NetworkEvent.NetworkTransportMessage(socketEvent: socketEvent)
+            }
             try send(payload: payload, over: connection, encoder: encoder, trackedEvent: event)
         } catch {
             // Intentionally dropped: monitoring should not crash user apps.
@@ -152,7 +171,7 @@ actor EventTransport {
         payload: NetworkEvent.NetworkTransportMessage,
         over connection: NWConnection,
         encoder: JSONEncoder,
-        trackedEvent: NetworkEvent?
+        trackedEvent: PendingEvent?
     ) throws {
         var line = try encoder.encode(payload)
         line.append(0x0A)
@@ -164,7 +183,7 @@ actor EventTransport {
         }))
     }
 
-    private func handleSendCompletion(error: NWError?, event: NetworkEvent?, over connection: NWConnection) {
+    private func handleSendCompletion(error: NWError?, event: PendingEvent?, over connection: NWConnection) {
         guard error != nil else { return }
         guard self.connection === connection else { return }
         if let event {
@@ -176,7 +195,7 @@ actor EventTransport {
         scheduleReconnect(forceNow: true)
     }
 
-    private func enqueue(_ event: NetworkEvent) {
+    private func enqueue(_ event: PendingEvent) {
         pendingEvents.append(event)
         if pendingEvents.count > maxPendingEvents {
             pendingEvents.removeFirst(pendingEvents.count - maxPendingEvents)

@@ -112,7 +112,7 @@ final class WebSocketCaptureCoordinator: @unchecked Sendable {
         for task: URLSessionWebSocketTask,
         onlyOnce: Bool
     ) {
-        let output: (any SocketEventRecording, TaskState)? = lock.withLock {
+        let output: (any SocketEventRecording, TaskState, Bool)? = lock.withLock {
             guard isRecordingEnabled else { return nil }
             let key = ObjectIdentifier(task)
             var state = taskStates[key] ?? makeState(for: task)
@@ -122,10 +122,21 @@ final class WebSocketCaptureCoordinator: @unchecked Sendable {
             if kind == .resumed {
                 state.hasRecordedResume = true
             }
+            let shouldRecordCreation = !state.hasRecordedCreation
+            state.hasRecordedCreation = true
             taskStates[key] = state
-            return (recorder, state)
+            return (recorder, state, shouldRecordCreation)
         }
         guard let output else { return }
+        if output.2 {
+            output.0.record(
+                SocketCaptureEvent(
+                    connectionID: output.1.connectionID,
+                    kind: .created,
+                    endpoint: output.1.endpoint
+                )
+            )
+        }
         output.0.record(
             SocketCaptureEvent(
                 connectionID: output.1.connectionID,

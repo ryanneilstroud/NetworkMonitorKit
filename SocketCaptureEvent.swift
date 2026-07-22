@@ -1,7 +1,7 @@
 import Foundation
 
 struct SocketCaptureEvent: Equatable, Sendable {
-    enum Kind: String, Equatable, Sendable {
+    enum Kind: String, Codable, Equatable, Sendable {
         case created
         case resumed
         case message
@@ -11,7 +11,7 @@ struct SocketCaptureEvent: Equatable, Sendable {
         case failed
     }
 
-    enum Direction: String, Equatable, Sendable {
+    enum Direction: String, Codable, Equatable, Sendable {
         case inbound
         case outbound
     }
