@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "PeriscopeKit"
-  s.version      = "1.2.0"
+  s.version      = "1.2.0-beta.1"
   s.summary      = "Capture URLSession traffic for Periscope viewers."
   s.description  = "PeriscopeKit captures URLSession HTTP and native WebSocket activity for Periscope viewers."
   s.homepage     = "https://github.com/ryanneilstroud/PeriscopeKit"

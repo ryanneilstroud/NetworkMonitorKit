@@ -12,7 +12,7 @@ Add this package as a dependency in Xcode, then include `PeriscopeKit` in your a
 ### CocoaPods
 
 ```ruby
-pod 'PeriscopeKit', :git => 'https://github.com/ryanneilstroud/PeriscopeKit.git', :tag => 'v1.2.0'
+pod 'PeriscopeKit', '1.2.0-beta.1'
 ```
 
 ## Quick Start
@@ -27,6 +27,8 @@ Calling `capture(for:)` also installs automatic native WebSocket observation whe
 the current Foundation runtime is supported. Existing `URLSessionWebSocketTask`
 construction and send/receive calls do not need to change. Query
 `Periscope.webSocketCaptureAvailability` to diagnose runtime compatibility.
+PeriscopeKit and its automatic WebSocket observation are intended for debug builds;
+do not enable capture in production releases.
 
 The initial WebSocket proof of concept observes application-level text and binary
 messages from Apple's native WebSocket task. It does not observe Starscream,
